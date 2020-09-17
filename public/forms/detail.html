@@ -1,0 +1,70 @@
+<div data-jc="panel__common.form__if:detail;title:@(Detail);bg:true;icon:file;reload:detailfile/reload;bgclose:true" class="hidden">
+	<div class="padding">
+		<div data-bind="detailfile__template__strict">
+			<script type="text/html">
+
+				{{ if (value.ext === 'jpg' || value.ext === 'png' || value.ext === 'gif' || value.ext === 'jpeg') && value.size < 512000 }}
+					<div class="m"><img src="{{ value.fileid | download }}" class="img-responsive" /></div>
+				{{ fi }}
+
+				<table class="table table-bordered table-small">
+					<tr>
+						<td class="bg-smoke">@(Owner)</td>
+						<td class="b">{{ value.user.name }}</td>
+					</tr>
+					<tr>
+						<td class="bg-smoke">@(Type)</td>
+						<td class="b">{{ value.type }}</td>
+					</tr>
+					<tr>
+						<td class="bg-smoke">@(Size)</td>
+						<td class="b">{{ value.size | filesize }}</td>
+					</tr>
+					{{ if value.width && value.height }}
+					<tr>
+						<td class="bg-smoke">@(Dimension)</td>
+						<td class="b">{{ value.width }}x{{ value.height }} @(pixels)</td>
+					</tr>
+					{{ fi }}
+				</table>
+
+				{{ if value.note }}
+				<div class="bg-smoke m radius">
+					<div class="padding">
+						<b>@(Note)</b><br />{{ value.note }}
+					</div>
+				</div>
+				{{ fi }}
+
+				<a href="{{ value.fileid | download }}" class="button button-small b" target="_blank"><i class="fa fa-cloud-download"></i>@(Download file)</a>
+
+				{{ if value.owner }}
+					<div class="help">
+						<span class="link exec" data-exec="detailfile/edit"><i class="fa fa-edit"></i>@(Edit file detail)</span>
+					</div>
+				{{ fi }}
+
+			</script>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	PLUGIN('detailfile', function(exports) {
+
+		exports.reload = function(com) {
+			com.reconfigure({ title: detailfile.name });
+		};
+
+		exports.edit = function() {
+			SET('panelfile', CLONE(files.db.findItem('id', detailfile.id)), true);
+			SET('common.form', 'file');
+		};
+	});
+
+	Tangular.register('download', function(id) {
+		return OPENPLATFORM.tokenizator('/download/{0}/'.format(id));
+	});
+
+</script>

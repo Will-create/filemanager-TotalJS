@@ -1,0 +1,160 @@
+<style>
+	.panelfile-tags { margin-top: 5px; }
+	.panelfile-tags span { position: relative; margin: 8px 8px 0 0; font-size: 11px; background-color: #A0D468; padding: 3px 8px; border-radius: 3px; color: white; display: inline-block; line-height: 14px; font-size: 12px; cursor: pointer; }
+	.panelfile-tags span .fa { margin-right: 5px; }
+	.panelfile-1 { background-color: #4285F4 !important; }
+	.panelfile-3 { background-color: #FF851D !important; }
+</style>
+
+<div data-jc="panel__common.form__if:file;title:@(Edit file);bg:true;icon:file;reload:panelfile/reload" class="hidden">
+	<div class="padding">
+		<div data-jc="textbox__panelfile.name__required:true" class="m">@(Name)</div>
+		<div data-bind="panelfile__template__strict">
+			<script type="text/html">
+				<table class="table table-bordered table-small">
+					<tr>
+						<td class="bg-smoke">@(Type)</td>
+						<td class="b">{{ value.type }}</td>
+					</tr>
+					<tr>
+						<td class="bg-smoke">@(Size)</td>
+						<td class="b">{{ value.size | filesize }}</td>
+					</tr>
+					{{ if value.width && value.height }}
+					<tr>
+						<td class="bg-smoke">@(Dimension)</td>
+						<td class="b">{{ value.width }}x{{ value.height }} @(pixels)</td>
+					</tr>
+					{{ fi }}
+				</table>
+			</script>
+		</div>
+		<div data-jc="textbox__panelfile.path__maxlength:100;placeholder:@(Screenshots)">@(Directory)</div>
+		<div class="help m"><a href="javascript:void(0)" class="exec" data-exec="panelfile/path">@(Choose from existing)</a></div>
+		<div data-jc="textbox__panelfile.reference" style="margin-top:15px">@(Reference)</div>
+		<div class="help m">@(Files with same references will be siblings.)</div>
+	</div>
+	<div class="padding bg-smoke">
+		<div data-jc="textbox__%panelsearch__placeholder:@(Search user or group);autocomplete:panelfile/focus;type:search">@(Sharing)</div>
+		<div data-bind="panelfile.sharing__template" class="panelfile-tags">
+			<script type="text/html">
+				{{ foreach m in value }}
+					<span data-id="{{ m.id }}" class="exec panelfile-{{ m.typeid }}" data-exec="panelfile/remove"><i class="fa fa-times"></i>{{ m.name }}</span>
+				{{ end }}
+			</script>
+		</div>
+	</div>
+	<div class="padding">
+		<div data-jc="textboxtags__panelfile.tags__placeholder:@(Tag name)" class="m">@(Tags)</div>
+		<div data-jc="textbox__panelfile.note__maxlength:100">@(Note)</div>
+		<div class="help m">@(For example <code>invoices</code>, <code>customer</code>, etc. and press <b>ENTER</b>).</div>
+		<div data-jc="validation__panelfile">
+			<button class="button b exec" data-exec="panelfile/submit" name="submit" disabled>@(Save)</button>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	PLUGIN('panelfile', function(exports) {
+
+		exports.path = function(el) {
+
+			var items = [];
+
+			for (var i = 0; i < files.dirs.length; i++)
+				items.push({ name: files.dirs[i] });
+
+			SETTER('suggestion', 'show', 'left', el, items, function(item) {
+				MODIFY('panelfile.path', item.value);
+			}, 5, 5);
+		};
+
+		exports.reload = function() {
+			var sharing = [];
+			panelfile.sharing && panelfile.sharing.forEach(function(item) {
+
+				var name = item.substring(1);
+
+				switch (item.substring(0, 1)) {
+					case 'G':
+						sharing.push({ typeid: 2, id: name, name: name });
+						break;
+					case 'R':
+						sharing.push({ typeid: 3, id: name, name: name });
+						break;
+					default:
+						var user = common.users.findItem('id', item);
+						user && sharing.push({ typeid: 1, id: item, name: user.name });
+						break;
+				}
+			});
+			panelfile.sharing = sharing;
+			BIND('panelfile.sharing');
+		};
+
+		exports.submit = function() {
+
+			var data = CLONE(panelfile);
+
+			data.sharing = [];
+
+			panelfile.sharing && panelfile.sharing.forEach(function(item) {
+				data.sharing.push(item.typeid === 1 ? item.id : item.type === 2 ? ('G' + item.id) : ('R' + item.id));
+			});
+
+			OPENPLATFORM.loading(true);
+			AJAX('POST /api/files/ REPEAT', data, function(response) {
+				SET('common.form', '');
+				files.db = null;
+				REDIRECT();
+			});
+		};
+
+		exports.focus = function(com) {
+			SETTER('autocomplete', 'attach', com.find('input'), function(search, render) {
+
+				search = search.toSearch();
+				var arr = [];
+
+				for (var i = 0; i < common.users.length; i++) {
+					var item = common.users[i];
+					if (item.id !== user.id && item.name.toSearch().indexOf(search) !== -1)
+						arr.push({ name: item.name, id: item.id, type: '@(User)', typeid: 1 });
+				}
+
+				for (var i = 0; i < common.meta.groups.length; i++) {
+					var item = common.meta.groups[i];
+					if (item.id !== user.id && item.name.toSearch().indexOf(search) !== -1)
+						arr.push({ name: item.name, id: item.id, type: '@(Group)', typeid: 2 });
+				}
+
+				for (var i = 0; i < common.meta.roles.length; i++) {
+					var item = common.meta.roles[i];
+					if (item.id !== user.id && item.name.toSearch().indexOf(search) !== -1)
+						arr.push({ name: item.name, id: item.id, type: '@(Role)', typeid: 3 });
+				}
+
+				render(arr);
+
+			}, function(selected) {
+
+				com.set('');
+
+				if (!panelfile.sharing || panelfile.sharing.findItem('id', selected.id) == null)
+					PUSH('panelfile.sharing', { id: selected.id, name: selected.name, typeid: selected.typeid });
+
+				CHANGE('panelfile.*', true);
+
+			}, -6, 10, 9);
+		};
+
+		exports.remove = function(el) {
+			if (!el.closest('.panelfile-container').hclass('disabled')) {
+				panelfile.sharing = panelfile.sharing.remove('id', el.attrd('id'));
+				UPDATE('panelfile.sharing');
+			}
+		};
+	});
+
+</script>

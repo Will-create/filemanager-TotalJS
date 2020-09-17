@@ -1,0 +1,100 @@
+/*auto*/
+
+$color    : #4285F4;
+
+html,body { overflow: hidden; }
+body { padding:0; margin:0; font:normal 14px Arial; color: #505050; background-color: white; line-height: 20px; }
+
+.body { margin-left: 220px; position: relative; }
+.padding { padding: 20px; }
+.hidden { display: none; }
+.scroller { overflow-y: auto; overflow-x: hidden; overflow-scrolling: touch; }
+.scroller-padding { padding: 20px 30px 20px 20px; }
+
+.mainmenu { float: left; width: 220px; background-color: #F0F0F0; padding: 22px 0 10px; transition: all 0.3s; }
+.mainmenu nav li { display: block; width: 90%; border: 0; text-align: left; padding: 6px 10px; background-color: transparent; color: black; outline: 0; text-decoration: none; margin: 0 auto 3px; cursor: pointer; }
+.mainmenu nav li:hover { text-decoration: none; }
+.mainmenu nav .fa { width: 20px; text-align: center; margin-right: 5px; }
+.mainmenu nav span { float: right; font-size: 11px; color: gray; }
+.mainmenu .selected { background-color: rgba(0,0,0,0.08) !important; border-radius: 3px; }
+.mainmenu-visible { left: 0 !important; }
+
+.search-container { background-color: white; z-index: 2; padding: 23px 20px 20px; border-bottom: 1px solid #E0E0E0; }
+
+.ui-search { margin-left: 120px; }
+.ui-search { height: 34px; padding: 0; border: 1px solid #E0E0E0; border-radius: 3px; background-color: white; }
+.ui-search-input { margin: 0 0 0 34px; }
+.ui-search-input input { background-color: white; border: 0; font-size: 14px; width: 100%; outline: 0; padding: 6px 10px 0 0; }
+.ui-search-icon { float: left; width: 34px; font-size: 16px; padding: 7px 0 0; text-align: center; height: 33px; color: #909090; }
+.ui-search-icon .fa-times { color: red; cursor: pointer; }
+
+.search-button { float: left; width: 100px; font-size: 14px; font-weight: bold; }
+.search-button .fa { margin-right: 5px; }
+.search-button button { width: 100%; background-color: $color; outline: 0; height: 34px; border: 0; border-radius: 3px; color: white; font-size: 12px; }
+.search-button button:hover { opacity: 0.8; }
+.search-button button:disabled { color: gray; background-color: #F0F0F0; opacity: 1 !important; }
+
+.button { background-color: #4285F4; border: 0; color: white; cursor: pointer; outline: 0; width: 100%; border-radius: 3px; height: 44px; text-transform: uppercase; font-family: Arial; font-size: 14px; }
+.button:hover { box-shadow: 0 2px 5px rgba(0,0,0,0.1); opacity: 0.9; }
+.button:disabled { background-color: #E0E0E0; color: silver; cursor: not-allowed; box-shadow: none; opacity: 1; }
+.button .fa, .button .fal, .button .far { margin-right: 5px; }
+.button-small { height: 32px; font-size: 12px; }
+
+a.button { display: block; text-decoration: none; text-align: center; padding: 11px 0 0 0; }
+a.button-small { padding-top: 5px; }
+a.button:hover { text-decoration: none; }
+
+.panel { background-color: white; border-radius: 3px; box-shadow: 0 3px 10px rgba(0,0,0,0.03); border: 1px solid #E0E0E0; }
+.panel > label { display: block; padding: 10px 20px; border-bottom: 1px solid #E0E0E0; font-size: 14px; font-weight: bold; }
+.panel > label .fa, .panel > label .fal, .panel > label .far { margin-right: 5px; }
+.panel-body { padding: 20px; position: relative; }
+
+.help { font-size: 11px; color: #A0A0A0; margin-top: 8px; line-height: 13px; }
+.help .fa, .help .far, .help .fal { margin-right: 5px; }
+.help code { font: normal normal 11px Arial; background-color: #F0F0F0; padding: 1px 3px; border-radius: 2px; border: 1px solid #E0E0E0; }
+
+.nmt { margin-top: 0 !important; }
+.b { font-weight: bold; }
+.empty { font-size: 12px; color: #505050; margin: 50px auto 20px; padding: 20px 0; text-align: center; max-width: 250px; border-top: 1px solid #E0E0E0; border-bottom: 1px solid #E0E0E0; }
+.empty span { font-size: 16px; font-weight: bold; color: #68A754; text-transform: uppercase; }
+.m { margin-bottom: 20px; }
+.bg-smoke { background-color: #F8F8F8; }
+
+.ibutton.remove { color: red; border-color: red; }
+.ibutton { font-size: 11px; background-color: white; border-radius: 3px; border: 1px solid #E0E0E0; outline: 0; padding: 2px 10px; }
+.ibutton:hover { border-color: #D0D0D0; }
+.ibutton .fa { margin-right: 5px; }
+
+.link { color: #307BBE; cursor: pointer; }
+.link:hover { text-decoration: underline; }
+.link .fa { margin-right: 5px; }
+
+.table-small { font-size: 12px; }
+.table-small > tbody > tr > td { padding: 3px 5px; }
+
+.badge { font-size: 9px; padding: 0 6px; border-radius: 2px; background-color: #F0F0F0; line-height: 12px; vertical-align: middle; margin-top: -2px; position: relative; display: inline-block; }
+.badge-blue { background-color: #4CC1E9; color: white; }
+.badge-red { background-color: #DA4453; color: white; }
+.badge-green { background-color: #8CC152; color: white; }
+.badge-yellow { background-color: #EFDC05; color: white; }
+.badge-orange { background-color: #E9573F; color: white; }
+.badge-gray { background-color: #606060; color: white; }
+.badge-purple { background-color: #967ADC; color: white; }
+.badge-pink { background-color: #D770AD; color: white; }
+.badge-silver { background-color: #E0E0E0; color: gray; }
+
+.mr5 { margin-right: 5px; }
+
+@media(max-width: 500px) {
+	.mainmenu { position: absolute; float: none; left: -800px; width: 100%; z-index: 10; }
+	.mainmenu nav a { font-size: 16px; padding: 8px 15px; }
+	.body { margin-left: 0; }
+	.padding { padding: 20px 20px; }
+	.scroller-padding { padding: 20px 10px; }
+}
+
+.operationmenu { position: absolute; left: 0; right: 0; text-align: center; z-index: 5; cursor: pointer; }
+.operationmenu div { width: 100px; background-color: #E0E0E0; margin: 0 auto; padding: 3px 5px; border-radius: 0 0 3px 3px; font-size: 11px; user-select: none; }
+.operationmenu div:hover { background-color: #D0D0D0; }
+
+.radius { border-radius: 3px; }

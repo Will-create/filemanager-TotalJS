@@ -1,0 +1,43 @@
+<div data-jc="panel__common.form__if:move;title:@(Move files);bg:true;icon:file;reload:movefiles/reload" class="hidden">
+	<div class="padding">
+		<div data-jc="textbox__movefiles.path__maxlength:100;placeholder:@(Screenshots)">@(Directory)</div>
+		<div class="help m"><a href="javascript:void(0)" class="exec" data-exec="movefiles/path">@(Choose from existing)</a></div>
+		<div data-jc="validation__movefiles">
+			<button class="button b exec" data-exec="movefiles/submit" name="submit" disabled>@(Save)</button>
+		</div>
+	</div>
+</div>
+
+<script>
+
+	PLUGIN('movefiles', function(exports) {
+
+		exports.path = function(el) {
+			var items = [];
+
+			for (var i = 0; i < files.dirs.length; i++)
+				items.push({ name: files.dirs[i] });
+
+			SETTER('suggestion', 'show', 'left', el, items, function(item) {
+				MODIFY('movefiles.path', item.value);
+			}, 5, 5);
+		};
+
+		exports.submit = function() {
+			OPENPLATFORM.loading(true);
+			common.selected.wait(function(id, next, index) {
+				var file = files.db.findItem('id', id);
+				file.path = movefiles.path;
+				AJAX('POST /api/files/ REPEAT', file, function() {
+					setTimeout(next, 500);
+				});
+				OPENPLATFORM.progress((index / common.selected.length) * 100);
+			}, function() {
+				REDIRECT();
+				OPENPLATFORM.loading(false);
+				SET('common.form', '');
+			});
+		};
+	});
+
+</script>

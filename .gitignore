@@ -1,0 +1,6 @@
+tmp/
+logs/
+databases/
+debug.pid
+sftp-config.json
+sftp-config-.json

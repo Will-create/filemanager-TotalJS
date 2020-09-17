@@ -1,0 +1,269 @@
+@{layout('')}
+@{title('Files')}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=11" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="robots" content="all,follow" />
+	<link href="//cdn.componentator.com/spa.min@16.css" rel="stylesheet" />
+	<script src="//cdn.componentator.com/spa.min@16.js"></script>
+	<script src="//cdn.totaljs.com/openplatform.min@3.js"></script>
+	@{import('meta', 'head', 'default.css', 'favicon.ico', 'default.js')}
+</head>
+<body data-jc="exec">
+
+	<div data-jc="LAZY autocomplete__null__height:200"></div>
+	<div data-jc="LAZY suggestion__null__placeholder:@(Search ...)"></div>
+	<div data-jc="LAZY confirm"></div>
+
+	<div data-jc="loading"></div>
+	<div data-jc="menu"></div>
+
+	<div class="mainmenu scroller">
+		<nav data-jc="selected__common.page__selector:li">
+			<li data-jr="/" data-if="all" class="jR b"><span data-bind="files.stats.all__html:value__show:value"></span><i class="fa fa-folder"></i> @(All files)</li>
+			<li data-jr="/personal/" data-if="personal" class="jR"><span data-bind="files.stats.personal__html:value__show:value"></span><i class="fa fa-user"></i> @(Personal)</li>
+			<li data-jr="/shared/" data-if="shared" class="jR"><span data-bind="files.stats.shared__html:value__show:value"></span><i class="fa fa-users"></i> @(Shared)</li>
+		</nav>
+	</div>
+
+	<div class="body">
+
+		<div class="search-container">
+			<div class="search-button"><button data-jc="fileupload__null__exec:Main/upload;url:/api/upload/"><i class="fa fa-cloud-upload"></i>@(UPLOAD)</button></div>
+			<div class="ui-search" data-jc="search__common.search__placeholder:@(Search files ...);exec:Main/search"></div>
+		</div>
+		<div class="operationmenu hidden" data-bind="common.selected__show:value && value.length__html div:value.length.pluralize(@('# selected', '# selected', '# selected', '# selected'))">
+			<div class="exec" data-exec="Main/operations"></div>
+		</div>
+
+		<div class="scroller">
+			<div class="scroller-padding">
+				<div data-jc="filebrowser__files.current__pluralize:@(# files,# file,# files,# files);selected:Main/selected;exec:Main/detail;onrender:Main/render"></div>
+			</div>
+		</div>
+	</div>
+
+	<div data-jc="importer__common.form__if:file;url:/forms/file.html;cleaner:10"></div>
+	<div data-jc="importer__common.form__if:detail;url:/forms/detail.html;cleaner:10"></div>
+	<div data-jc="importer__common.form__if:move;url:/forms/move.html;cleaner:10"></div>
+
+	@{json(user, 'userdata')}
+
+	<script>
+
+		var user = PARSE('#userdata');
+		var common = {};
+		var files = {};
+
+		files.stats = {};
+		common.page = '';
+
+		ON('request', function(options) {
+			if (options.url.indexOf('.') === -1)
+				options.url = OPENPLATFORM.tokenizator(options.url);
+		});
+
+		ROUTE('/', ['meta', 'files'], function() {
+
+			var page = 'all';
+
+			if (common.page !== page)
+				SETTER('filebrowser', 'current', '/');
+
+			SET('files.current', files.db.slice(0));
+			SET('common.page', page);
+			OPENPLATFORM.loading(false);
+		});
+
+		ROUTE('/personal/', ['meta', 'files'], function() {
+
+			var page = 'personal';
+
+			if (common.page !== page)
+				SETTER('filebrowser', 'current', '/');
+
+			SET('files.current', files.db.findAll(FN('n => n.userid === user.id && !n.sharing.length')));
+			SET('common.page', page);
+			OPENPLATFORM.loading(false);
+		});
+
+		ROUTE('/shared/', ['meta', 'files'], function() {
+
+			var page = 'shared';
+
+			if (common.page !== page)
+				SETTER('filebrowser', 'current', '/');
+
+			SET('files.current', files.db.findAll(FN('n => n.userid === user.id && n.sharing.length')));
+			SET('common.page', page);
+			OPENPLATFORM.loading(false);
+		});
+
+		MIDDLEWARE('meta', function(next) {
+			if (common.meta)
+				return next();
+			AJAX('GET /api/meta/', function(response) {
+				common.meta = response.meta;
+				common.users = response.users;
+				next();
+			});
+		});
+
+		MIDDLEWARE('files', function(next) {
+
+			if (files.db)
+				return next();
+
+			OPENPLATFORM.loading(true);
+			AJAX('GET /api/files/', function(response) {
+				SET('files.db', response);
+				EXEC('Main/prepare');
+				next();
+			})
+		});
+
+		PLUGIN('Main', function(exports) {
+
+			exports.prepare = function() {
+
+				files.stats.all = files.db.length;
+				files.stats.personal = 0;
+				files.stats.shared = 0;
+				files.dirs = {};
+
+				for (var i = 0; i < files.db.length; i++) {
+					var file = files.db[i];
+
+					if (file.userid === user.id)
+						files.stats.personal++;
+
+					if (file.sharing && file.sharing.length)
+						files.stats.shared++;
+
+					file.owner = file.userid === user.id;
+					var p = file.path ? file.path.replace(/\//g, '') : file.path;
+					p && (files.dirs[p] = 1);
+				}
+
+				files.dirs = Object.keys(files.dirs);
+				BIND('files.stats');
+			};
+
+			exports.upload = function(response, err) {
+
+				if (err)
+					return;
+
+				files.db.push(response);
+				OPENPLATFORM.focus();
+				EXEC('Main/prepare');
+				SET('panelfile', CLONE(response), true);
+				SET('common.form', 'file');
+				REDIRECT();
+			};
+
+			exports.selected = function(arr) {
+				SET('common.selected', arr);
+			};
+
+			exports.detail = function(item) {
+
+				var sharing = [];
+				var data = CLONE(item);
+
+				data.sharing && data.sharing.forEach(function(item) {
+					var name = item.substring(1);
+					switch (item.substring(0, 1)) {
+						case 'G':
+							sharing.push({ typeid: 2, id: name, name: name });
+							break;
+						case 'R':
+							sharing.push({ typeid: 3, id: name, name: name });
+							break;
+						default:
+							var user = common.users.findItem('id', item);
+							user && sharing.push({ typeid: 1, id: item, name: user.name });
+							break;
+					}
+				});
+
+				data.user = common.users.findItem('id', data.userid);
+				data.sharing = sharing;
+				SET('detailfile', data, true);
+				SET('common.form', 'detail');
+			};
+
+			exports.operations = function(el) {
+				SETTER('menu', 'show', 'center', el, [{ name: '@(Move files)', icon: 'copy', value: 'move' }, { name: '@(Remove)', icon: 'times-circle', value: 'remove' }], function(item) {
+
+					if (item.value === 'move') {
+						SET('movefiles.path', FIND('filebrowser').current.substring(1));
+						SET('common.form', 'move');
+						return;
+					}
+
+					SETTER('confirm', 'show', '@(Are you sure you want to remove selected items?)', ['"trash-o" @(Yes)', '@(Cancel)'], function(index) {
+						if (index)
+							return;
+						OPENPLATFORM.loading(true);
+						common.selected.wait(function(item, next, index) {
+							OPENPLATFORM.progress((index / common.selected.length) * 100);
+							files.db = files.db.remove('id', item);
+							AJAX('DELETE /api/files/{0}/'.format(item), function() {
+								setTimeout(next, 500);
+							});
+						}, function() {
+							REDIRECT();
+							OPENPLATFORM.progress(0);
+							OPENPLATFORM.loading(false);
+						});
+					});
+				});
+			};
+
+			exports.render = function(path) {
+				SET('common.search', '');
+			};
+
+			exports.search = function(val) {
+				SETTER('filebrowser', 'search', val);
+			};
+		});
+
+		ON('location', function() {
+			$('.mainmenu').rclass('mainmenu-visible');
+		});
+
+		OPENPLATFORM.on('menu', function() {
+			$('.mainmenu').tclass('mainmenu-visible');
+		});
+
+		OPENPLATFORM.on('screenshot', function(body) {
+			var data = {};
+			data.data = body.data;
+			data.filename = 'screenshot_' + body.app.linker + '_' + new Date().format('yyMMddHH') + '.jpg';
+			AJAX('POST /api/upload/base64/', data, function(response, err) {
+				EXEC('Main/upload', response, err);
+			});
+		});
+
+		OPENPLATFORM.on('share', function(body) {
+			console.log(body);
+		});
+
+		ON('request', function(options) {
+			if (options.url.indexOf('/api/upload/') !== -1) {
+				var path = FIND('filebrowser').current;
+				options.url += '&path=' + encodeURIComponent(path.substring(1));
+			}
+		});
+
+	</script>
+
+</body>
+</html>

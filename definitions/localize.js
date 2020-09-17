@@ -1,0 +1,1 @@
+LOCALIZE('/forms/*.html');
